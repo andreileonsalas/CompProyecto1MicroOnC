@@ -6,6 +6,11 @@ https://github.com/MatiasMorsa/TP-Sintaxis-UTN-2016-Compilador-del-Lenguaje-Micr
 http://fivedots.coe.psu.ac.th/Software.coe/Compilers/code/expressions/exprParse0.c
 http://fivedots.coe.psu.ac.th/Software.coe/Compilers/code/expressions/
 https://freesoft.dev/program/118072250
+
+otro scanner pero no de micro
+
+https://www.eecis.udel.edu/~chester/courses/471hw/scanner.cc
+
 void system_goal(void)
 {
     program();
