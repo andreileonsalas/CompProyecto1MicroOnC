@@ -22,7 +22,7 @@ extern char token_buffer[];
 
 
 void lexical_error(int ch)
-{ printf("Lexical error at \"%c\" on line\n", ch);  
+{ printf("Lexical error at \"%c\" ", ch);  
   exit(1);
 }
 
