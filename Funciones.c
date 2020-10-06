@@ -48,7 +48,7 @@ void program(void)
 void statement_list(void)
 {
 	statement();
-	white (TRUE) {
+	while (1) {
 		switch (next_token()) {
 		case ID:
 		case READ:
@@ -62,15 +62,17 @@ void statement_list(void)
 }
 
 // Tiene 3 opciones: que sea read, write o declaración de variables
-void statement(void)
+void statement()
 {
 	token tok = next_token();
+	expr_rec left, right;
 	switch (tok) {
 	case ID:
+		id(&left);
 		/* <statement> ::= ID := <expresion>; */
-		match (ID);
 		match (ASSIGNOP);
-		expression();
+		expression(&right);
+		assign(left, right);
 		match (SEMICOLON);
 		break;
 
@@ -142,14 +144,14 @@ void primary (expr_rec * result)
 }
 
 // Operacion de suma o resta
-void add_op(char * result)
+void add_op(op_rec * result)
 {
 	token tok = next_token();
 
 	/* <addop> ::= PLUSOP | MINUSOP */
 	if (tok == PLUSOP || tok == MINUSOP)
 		match(tok);
-	strcpy(result, process_op());
+	//process_op();
 	else
 	{
 		syntax_error(tok);
@@ -164,8 +166,8 @@ void id_list(void)
 	id(&reg);
 	read_id(reg);
 
-	for(t=next_token(); t == COMA; t=next_token()) {
-		match(COMA);
+	for(tok=next_token(); tok == COMMA; tok=next_token()) {
+		match(COMMA);
 		id(&reg);
 		read_id(reg);
 	}
@@ -185,10 +187,10 @@ void expr_list(void)
 	expr_rec reg;
 	expression(&reg);
 	write_expr(reg);
-	for ( tok = next_token(); t == COMA; t = next_token()) {
-		Match(COMA);
-		Expresion(&reg);
-		Escribir(reg);
+	for ( tok = next_token(); tok == COMMA; tok = next_token()) {
+		match(COMMA);
+		expression(&reg);
+		write_expr(reg);
 	}
 	// while (next_token() == COMMA) {
 	// 	match(COMMA);
@@ -199,7 +201,7 @@ void expr_list(void)
 // retorna el siguiente token a ser asociado
 token next_token(void){
 	if (flagToken!=1) {
-		current_token = scanner();
+		current_token = scanner(archivo);
 		flagToken = 1;
 		if(current_token == LEXICALERROR) {
 			lexical_error();
@@ -213,38 +215,38 @@ token next_token(void){
 }
 
 void id(expr_rec * result){
-	Match(ID);
-	*result = ProcesarId();
+	match(ID);
+	*result = process_id();
 }
 
 
 /* -----------------------------------------------SCANNER------------------------------------------------------*/
 
-token scanner (FILE *fp)
+token scanner ()
 {
 	int in_char, c;
 	clear_buffer();//limpia el array
-	if (feof(fp))
+	if (feof(archivo))
 		return SCANEOF;
-	while ((in_char = getc(fp)) != EOF) {
+	while ((in_char = getc(archivo)) != EOF) {
 		if (isspace(in_char))
 			continue; /* do nothing */
 		else if (isalpha(in_char)) {//revisa si el caracter es alfabetico
 
 			buffer_char(in_char);//agrega caracter al buffer
 
-			for (c = getc(fp); isalnum(c) || c == '_'; c = getc(fp)) { //recorre la hilera agregando caracteres al buffer_char, termina cuando no es un caracter ni underscore
+			for (c = getc(archivo); isalnum(c) || c == '_'; c = getc(archivo)) { //recorre la hilera agregando caracteres al buffer_char, termina cuando no es un caracter ni underscore
 				buffer_char(c);
 			}
-			ungetc(c,fp);
+			ungetc(c,archivo);
 
 			return check_reserved(); //Revisa si el string encontrado es una palabra reservada
 
 		}  else if (isdigit(in_char)) {
 			buffer_char(in_char);
-			for (c = getc(fp); isdigit(c); c = getc(fp))
+			for (c = getc(archivo); isdigit(c); c = getc(archivo))
 				buffer_char(c);
-			ungetc(c,fp);
+			ungetc(c,archivo);
 			return INTLITERAL;
 		} else if (in_char == '(')
 			return LPAREN;
@@ -258,23 +260,23 @@ token scanner (FILE *fp)
 			return PLUSOP;
 		else if (in_char == ':') {
 			/* looking for ":=" */
-			c = getc(fp);
+			c = getc(archivo);
 			if (c == '=')
 				return ASSIGNOP;
 			else {
-				ungetc(c,fp);
+				ungetc(c,archivo);
 				lexical_error();//
 			}
 		} else if (in_char == '-') {
 			/* is it --, comment start */
-			c = getc(fp);
+			c = getc(archivo);
 			if (c == '-') {
 				do
 				{
-					in_char = getc(fp);
+					in_char = getc(archivo);
 				} while (in_char != '\n');
 			} else {
-				ungetc(c,fp);
+				ungetc(c,archivo);
 				return MINUSOP;
 			}
 		}  else
@@ -288,9 +290,9 @@ token scanner (FILE *fp)
 void buffer_char(int c)
 {
 	//agregar
-	//printf("buffer char character %c \n",c);
+	printf("buffer char character %c \n",c);
 	token_buffer[ncol] = c;
-	//printf("ncol char character %d \n",ncol);
+	printf("ncol char character %d \n",ncol);
 	ncol++;
 
 }
@@ -378,15 +380,15 @@ void read_id(expr_rec in_var)
 //Genera una instrucción de write - Escribir()
 void write_expr(expr_rec out_expr)
 {
-	generate("Write", extract(out_expr),"Integer","");
+	generate("Write", extractExpr(&out_expr),"Integer","");
 }
 
 //Auxiliar del gen_infix, rutina para almacenar temporales
 char *get_temp(void)
 {
 	/* max temporary allocated so far */
-	static int max_temp = 0
-	                      static char tempname [MAXIDLEN];
+	static int max_temp = 0;
+	static char tempname [MAXIDLEN];
 
 	max_temp++;
 	sprintf(tempname, "Temp&%d", max_temp);
@@ -398,7 +400,6 @@ char *get_temp(void)
    Get result temp and set up semantic record for result - GenInfijo()*/
 expr_rec gen_infix(expr_rec e1, op_rec op, expr_rec e2)
 {
-	static int max_te
 	//expr_rec tiene kind,name,value
 	expr_rec e_rec;     /* An expr_rec with temp variant set. */
 	e_rec.kind = TEMPEXPR;
@@ -412,7 +413,7 @@ expr_rec gen_infix(expr_rec e1, op_rec op, expr_rec e2)
 	if(e2.kind == IDEXPR) {
 		check_id(extractExpr(&e2));
 	}
-	generate (extractOp(op), extractExpr(e1),extractExpr(e2), e_rec.name);
+	generate (extractOp(&op), extractExpr(&e1),extractExpr(&e2), e_rec.name);
 	return e_rec;
 }
 
@@ -438,17 +439,22 @@ char * extractExpr(expr_rec * reg){
 	if(reg->kind == IDEXPR) {
 		return reg->name;
 	}
-	else if(reg->kind == LITERALEXPR) {
-		return reg->val;
-	}
-	else{
-		return;
+	// else if(reg->kind == LITERALEXPR) {
+	// 	return reg->val;
+	// }
+	// else{
+	// 	return 0;
+	// }
+}
+
+char * extractOp (op_rec * op){
+	if(op->operator == PLUS) {
+		return "Add";
+	} else {
+		return "Sub";
 	}
 }
 
-char * extractOp(op_rec * op){
-	return op->operator;
-}
 
 //Busca si existe un símbolo dado en la tabla de símbolos - Buscar()
 int lookup(char * id, RegTS * TS, token * t){
@@ -493,7 +499,7 @@ void check_id(char *s)
 /* Generate code for assignment. */
 void assign (expr_rec target, expr_rec source)
 {
-	generate ("Store", extract (source), target.name,"");
+	generate ("Store", extractExpr(&source), target.name,"");
 }
 
 
