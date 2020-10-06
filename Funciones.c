@@ -1,8 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
 #include "Funciones.h"
-#define _CRT_SECURE_NO_WARNINGS
+// #define _CRT_SECURE_NO_WARNINGS
 
 
 //Tabla de simbolos
@@ -508,31 +505,4 @@ void start (void)
 void finish (void)
 {
 	generate("Halt","","","");
-}
-
-int main(int argc, char **argv){
-
-	FILE *fp;
-	token token;
-
-	if (argc==2) {
-		if ( NULL== (fp= fopen(argv[1],"r")) ) {
-			fprintf(stderr, "File %s cannot be open\n", argv[1]);
-			return(0);
-		}
-		else {
-			token=scanner(fp);
-			while (EOF != token) {
-				token=scanner(fp);
-			}
-			//printf(token_buffer);
-			// int result = strcmp(token_buffer, "Begin");
-			// printf("strcmp(str1, str2) = %d\n", result);
-			return(0);
-		}
-	}
-	else {
-		fprintf(stderr, "Usage: program_name file_name\n");
-		return(0);
-	}
 }
