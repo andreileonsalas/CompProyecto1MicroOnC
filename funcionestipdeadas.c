@@ -10,38 +10,3 @@ https://freesoft.dev/program/118072250
 otro scanner pero no de micro
 
 https://www.eecis.udel.edu/~chester/courses/471hw/scanner.cc
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//A parsing procedure including semantic processing
-void expression (expr rec *result)
-{
-	expr_rec left_operand, right_operand;
-	op_rec op;
-
-	primary (&left_operand);
-	while (next_token() == PLUSOP ||next_token() == MINUSOP)
-	{
-		add_op (&op);
-		primary (&right_operand);
-		left_operand = gen_infix (left_operand, op, right_operand);
-	}
-	*result = left_operand;
-}

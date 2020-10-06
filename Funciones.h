@@ -1,8 +1,10 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+
+#ifndef FUNCIONES_H_
+#define FUNCIONES_H_
 
 #define MAXRESWORDS 4
 #define MAXIDLEN 33
@@ -83,3 +85,5 @@ void check_id(char *s);
 void assign (expr_rec target, expr_rec source);
 void start (void);
 void finish (void);
+
+#endif /* Funciones_H_ */
