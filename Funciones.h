@@ -17,7 +17,6 @@ typedef enum token_types {
 } token;
 
 
-
 typedef struct operator { /* for operator */
 	enum op { PLUS, MINUS} operator;
 }   op_rec;
@@ -47,7 +46,7 @@ int token_len;
 int ncol;
 
 
-char token_buffer[1024];
+char token_buffer[MAXIDLEN];
 
 FILE * archivo;
 FILE * archivoSalida;

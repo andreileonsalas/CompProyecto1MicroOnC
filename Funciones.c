@@ -9,6 +9,7 @@ int numeroVariableTemporal=1;
 
 /* ------------------------------------------PARSER---------------------------------------------------------------*/
 
+
 void syntax_error(token tok)
 {
 	printf("Syntax error at \"%c\" ", tok);
@@ -228,7 +229,10 @@ token scanner ()
 	clear_buffer();//limpia el array
 	if (feof(archivo))
 		return SCANEOF;
+
+
 	while ((in_char = getc(archivo)) != EOF) {
+
 		if (isspace(in_char))
 			continue; /* do nothing */
 		else if (isalpha(in_char)) {//revisa si el caracter es alfabetico
@@ -240,14 +244,21 @@ token scanner ()
 			}
 			ungetc(c,archivo);
 
+
+
 			return check_reserved(); //Revisa si el string encontrado es una palabra reservada
 
 		}  else if (isdigit(in_char)) {
+
 			buffer_char(in_char);
 			for (c = getc(archivo); isdigit(c); c = getc(archivo))
 				buffer_char(c);
 			ungetc(c,archivo);
+			token_buffer[ncol] = '\0';
+			//printf( "Token_Buffer = %s\n", &token_buffer[0] );
+
 			return INTLITERAL;
+
 		} else if (in_char == '(')
 			return LPAREN;
 		else if (in_char == ')')
@@ -290,9 +301,9 @@ token scanner ()
 void buffer_char(int c)
 {
 	//agregar
-	printf("buffer char character %c \n",c);
+	// printf("buffer char character %c \n",c);
 	token_buffer[ncol] = c;
-	printf("ncol char character %d \n",ncol);
+	//printf("ncol char character %d \n",ncol);
 	ncol++;
 
 }
@@ -300,8 +311,13 @@ void buffer_char(int c)
 void clear_buffer(void)
 // reset the token string to be empty
 { //token_buffer[0] = '\0';
-	memset(token_buffer,0,strlen(token_buffer));
+	int i;
+	for (i=0; i < MAXIDLEN; i++) {
+		token_buffer[i]='\0';
+	}
 	ncol = 0;
+	//memset(token_buffer,0,strlen(token_buffer));
+
 } // end of clearTokStr()
 
 
@@ -311,29 +327,43 @@ void clear_buffer(void)
  */
 token check_reserved(void)
 {
+	token_buffer[ncol] = '\0';
+	//printf( "Token_Buffer = %s\n", &token_buffer[0] );
+
 
 	int i=0;
 	token tok;
+
 	if (strcmp(token_buffer,"begin")==0)
 	{
 		tok=BEGIN;
+		return(tok);
 	}
-	if (strcmp(token_buffer,"end")==0)
+	else if (strcmp(token_buffer,"end")==0)
 	{
 		tok=END;
+		return(tok);
 	}
-	if (strcmp(token_buffer,"read")==0)
+	else if (strcmp(token_buffer,"read")==0)
 	{
 		tok=READ;
+		return(tok);
 	}
-	if (strcmp(token_buffer,"write")==0)
+	else if (strcmp(token_buffer,"write")==0)
 	{
 		tok=WRITE;
+		return(tok);
+	}
+	else {
+		tok=ID;
+		return(tok);
 	}
 	//printf("\n");
 	//printf(token_buffer);
-	return(tok);
+
 }
+
+
 
 /*-----------------------------Semantic routines-------------------------------*/
 
