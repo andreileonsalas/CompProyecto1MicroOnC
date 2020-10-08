@@ -27,12 +27,12 @@ int validation (char* archive,char c){
 
 // Llama al scanner para conseguir el siguiente token
 void match(token tok){
-	printf("pre MATCH con: %d\n", tok);
+	//printf("pre MATCH con: %d\n", tok);
 	token temp = next_token();
-	printf("pre MATCH temp: %d\n", temp);
+	//printf("pre MATCH temp: %d\n", temp);
 	if (temp!=tok) {
-		printf("token_buffer tiene %s \n",token_buffer);
-		printf("Error de sintaxis MATCH con: %d\n", tok);
+		//printf("token_buffer tiene %s \n",token_buffer);
+		//printf("Error de sintaxis MATCH con: %d\n", tok);
 		syntax_error();
 	}
 	flagToken=0;
@@ -41,7 +41,7 @@ void match(token tok){
 // <program> SCANEOF
 void system_goal(void){
 	program();
-	printf("entrando a revisar match SCANEOF\n");
+	//printf("entrando a revisar match SCANEOF\n");
 	match(SCANEOF);
 }
 
@@ -96,7 +96,7 @@ void statement(void){
 		match(SEMICOLON);
 		break;
 	default:
-		printf("syntax error en statement \n");
+		//printf("syntax error en statement \n");
 		syntax_error();
 		break;
 	}
@@ -140,16 +140,15 @@ void primary(expr_rec * result){
 /* <addop> ::= PLUSOP | MINUSOP */
 void add_op(char * result){
 	token tok = next_token();
-	printf("el operador asignado es: %d\n", tok);
+	//printf("el operador asignado es: %d\n", tok);
 	if (tok == PLUSOP || tok == MINUSOP) {
-		printf("el operador asignado es: %d\n", tok);
+		//printf("el operador asignado es: %d\n", tok);
 		match(tok);
-		printf("el operador asignado es: %d\n", tok);
+		//printf("el operador asignado es: %d\n", tok);
 		strcpy(result, process_op());
-		printf("el operador asignado es: %d\n", tok);
-		printf(result);
+		//printf("el operador asignado es: %d\n", tok);
+		//printf(result);
 	} else
-	printf("error de sintaxis con %d\n", tok);
 		syntax_error();
 }
 
@@ -189,10 +188,10 @@ void expr_list(void){
 }
 
 token next_token(void){
-	printf("%i\n",flagToken);
+	//printf("%i\n",flagToken);
 	if (flagToken!=1) {
 		current_token = scanner();
-		printf("next token es: %d\n", current_token);
+		//printf("next token es: %d\n", current_token);
 		flagToken = 1;
 		if(current_token == LEXICALERROR) {
 			lexical_error();
@@ -202,8 +201,8 @@ token next_token(void){
 		}
 
 	}
-	printf("next token al final devuelve: %d\n", current_token);
-	printf("y token buffer tiene %s\n", token_buffer);
+	//printf("next token al final devuelve: %d\n", current_token);
+	//printf("y token buffer tiene %s\n", token_buffer);
 	return current_token;
 }
 
@@ -221,7 +220,7 @@ void id(expr_rec * result){
 token check_reserved(void)
 {
 	//token_buffer[ncol] = '\0';
-	//printf( "Token_Buffer = %s\n", &token_buffer[0] );
+	////printf( "Token_Buffer = %s\n", &token_buffer[0] );
 
 
 	int i=0;
@@ -269,7 +268,7 @@ token scanner ()
 
 
 	while ((in_char = getc(archive)) != EOF) {
-		printf("caracter actual es:%c\n",in_char);
+		//printf("caracter actual es:%c\n",in_char);
 
 		if (isspace(in_char))
 			continue; /* do nothing */
@@ -296,8 +295,7 @@ token scanner ()
 			ungetc(c,archive);
 
 			//token_buffer[ncol] = '\0';
-			//printf( "Token_Buffer = %s\n", &token_buffer[0]);
-
+			////printf( "Token_Buffer = %s\n", &token_buffer[0]);
 			return INTLITERAL;
 
 		} else if (in_char == '(')
@@ -309,8 +307,8 @@ token scanner ()
 		else if (in_char == ',')
 			return COMMA;
 		else if (in_char == '+') {
-			printf("caracter actual in_char es:%c\n",in_char);
-			printf("caracter actual c es:%c\n",c);
+			//printf("caracter actual in_char es:%c\n",in_char);
+			//printf("caracter actual c es:%c\n",c);
 			buffer_char(in_char, i);
 			i++;
 			return PLUSOP;
@@ -326,18 +324,18 @@ token scanner ()
 				lexical_error();//
 			}
 		} else if (in_char == '-') {
-			printf("entro al comentario/menos \n");
+			//printf("entro al comentario/menos \n");
 			/* is it --, comment start */
 			c = getc(archive);
 			if (c == '-') {
-				printf("entro al comentario \n");
+				//printf("entro al comentario \n");
 				do
 				{
 					in_char = getc(archive);
 				} while (in_char != '\n');
 			} else {
-				printf("caracter actual in_char es:%c\n",in_char);
-				printf("caracter actual c es:%c\n",c);
+				//printf("caracter actual in_char es:%c\n",in_char);
+				//printf("caracter actual c es:%c\n",c);
 				buffer_char(in_char, i);
 				i++;
 				ungetc(c,archive);
@@ -470,9 +468,9 @@ token scanner ()
 // void buffer_char(int c)
 // {
 // 	//agregar
-// 	printf("buffer char character %c \n",c);
+// 	//printf("buffer char character %c \n",c);
 // 	token_buffer[ncol] = c;
-// 	//printf("ncol char character %d \n",ncol);
+// 	////printf("ncol char character %d \n",ncol);
 // 	ncol++;
 //
 // }
@@ -481,12 +479,12 @@ token scanner ()
 /* Adds argument to token_buffer*/
 void buffer_char(int c, int posicion){
 	token_buffer[posicion] = c;
-	printf("\nSe imprime %c\n",c);
+	//printf("\nSe imprime %c\n",c);
 }
 
 // Reset the token string to be empty
 void clear_buffer(void){
-	printf("Se limpio el buffer\n");
+	//printf("Se limpio el buffer\n");
 	memset(token_buffer,0,strlen(token_buffer));
 	int i;
 	for (i=0; i < strlen(token_buffer); i++){
@@ -517,7 +515,7 @@ expr_rec process_id(void){
 
 /* Produce operator descriptor. (Diff on book)*/
 char * process_op(void){
-	printf("El operador es %s \n",token_buffer);
+	//printf("El operador es %s \n",token_buffer);
 	return token_buffer;
 }
 
@@ -575,14 +573,14 @@ expr_rec gen_infix(expr_rec e1, char * op, expr_rec e2){
 	char cadenaTemporal[MAXIDLEN] = "Temp&";
 	char numero[MAXIDLEN];
 	char cadenaOperador[MAXIDLEN];
-	printf("Genera codigo aaaaa%c\n",op[0]);
-	printf("Genera codigo aaaaa%s\n",op);
-	printf("el buffer tiene: %s\n",token_buffer);
+	//printf("Genera codigo aaaaa%c\n",op[0]);
+	//printf("Genera codigo aaaaa%s\n",op);
+	//printf("el buffer tiene: %s\n",token_buffer);
 	if (op[0] == '-')
-		{printf("Genera codigo para sub \n");
+		{//printf("Genera codigo para sub \n");
 		strcpy(cadenaOperador, "Sub");}
 	if (op[0] == '+')
-		{printf("Genera codigo para add \n");
+		{//printf("Genera codigo para add \n");
 		strcpy(cadenaOperador, "Add");}
 	sprintf(numero, "%d", numeroVariableTemporal);
 	numeroVariableTemporal++;
@@ -615,7 +613,7 @@ void generate(char * co, char * a, char * b, char * c){
 // 	if(reg->kind == IDEXPR) {
 // 		return reg->name;
 // 	} else {
-// 		printf("Something went wrong at extractExpr");
+// 		//printf("Something went wrong at extractExpr");
 // 	}
 // }
 
