@@ -27,7 +27,12 @@ int validation (char* archive,char c){
 
 // Llama al scanner para conseguir el siguiente token
 void match(token tok){
-	if (next_token()!=tok) {
+	printf("pre MATCH con: %d\n", tok);
+	token temp = next_token();
+	printf("pre MATCH temp: %d\n", temp);
+	if (temp!=tok) {
+		printf("token_buffer tiene %s \n",token_buffer);
+		printf("Error de sintaxis MATCH con: %d\n", tok);
 		syntax_error();
 	}
 	flagToken=0;
@@ -36,6 +41,7 @@ void match(token tok){
 // <program> SCANEOF
 void system_goal(void){
 	program();
+	printf("entrando a revisar match SCANEOF\n");
 	match(SCANEOF);
 }
 
@@ -90,6 +96,7 @@ void statement(void){
 		match(SEMICOLON);
 		break;
 	default:
+		printf("syntax error en statement \n");
 		syntax_error();
 		break;
 	}
@@ -142,6 +149,7 @@ void add_op(char * result){
 		printf("el operador asignado es: %d\n", tok);
 		printf(result);
 	} else
+	printf("error de sintaxis con %d\n", tok);
 		syntax_error();
 }
 
@@ -181,9 +189,10 @@ void expr_list(void){
 }
 
 token next_token(void){
+	printf("%i\n",flagToken);
 	if (flagToken!=1) {
 		current_token = scanner();
-		//printf("%d", current_token);
+		printf("next token es: %d\n", current_token);
 		flagToken = 1;
 		if(current_token == LEXICALERROR) {
 			lexical_error();
@@ -193,6 +202,8 @@ token next_token(void){
 		}
 
 	}
+	printf("next token al final devuelve: %d\n", current_token);
+	printf("y token buffer tiene %s\n", token_buffer);
 	return current_token;
 }
 
@@ -234,6 +245,11 @@ token check_reserved(void)
 	else if (strcmp(token_buffer,"write")==0)
 	{
 		tok=WRITE;
+		return(tok);
+	}
+	else if (strcmp(token_buffer,"SCANEOF")==0)
+	{
+		tok=SCANEOF;
 		return(tok);
 	}
 	else {
