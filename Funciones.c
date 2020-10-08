@@ -563,11 +563,11 @@ expr_rec gen_infix(expr_rec e1, char * op, expr_rec e2){
 	printf("Genera codigo aaaaa%s\n",op);
 	printf("el buffer tiene: %s\n",token_buffer);
 	if (op[0] == '-')
-	printf("Genera codigo para sub \n");
-		strcpy(cadenaOperador, "Sub");
+		{printf("Genera codigo para sub \n");
+		strcpy(cadenaOperador, "Sub");}
 	if (op[0] == '+')
-	printf("Genera codigo para add \n");
-		strcpy(cadenaOperador, "Add");
+		{printf("Genera codigo para add \n");
+		strcpy(cadenaOperador, "Add");}
 	sprintf(numero, "%d", numeroVariableTemporal);
 	numeroVariableTemporal++;
 	strcat(cadenaTemporal, numero);
