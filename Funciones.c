@@ -1,60 +1,59 @@
 
 #include "Funciones.h"
-// #define _CRT_SECURE_NO_WARNINGS
 
-
-//Tabla de simbolos
-RegTS TS[1000] = { {"start", BEGIN}, {"end", END}, {"read", READ}, {"write", WRITE}, {"$", 99} };
+RegTS TS[1000] = { {"begin", BEGIN}, {"end", END}, {"read", READ}, {"write", WRITE},{"$", 99} };
 int numeroVariableTemporal=1;
 
+/*----------------------------------------------------Validacion-----------------------------------*/
+
+
+int validation (char* archive,char c){
+
+	int i=0;
+	while(archive[i]!='.') {
+		i=i+1;
+	}
+	if ((archive[i+1] == c)&&(archive[i+2] =='\0')) {
+		return 1;
+	}else{
+		return 0;
+	}
+}
+
+
+
+
 /* ------------------------------------------PARSER---------------------------------------------------------------*/
-
-
-void syntax_error(token tok)
-{
-	printf("Syntax error at \"%c\" ", tok);
-	exit(1);
-}
-
-void lexical_error()
-{
-	printf("Lexical error.");
-	exit(1);
-}
 
 // Llama al scanner para conseguir el siguiente token
 void match(token tok){
 	if (next_token()!=tok) {
-		syntax_error(tok);
+		syntax_error();
 	}
 	flagToken=0;
 }
 
 // <program> SCANEOF
-void system_goal(void)
-{
+void system_goal(void){
 	program();
 	match(SCANEOF);
 }
 
 // begin <statement list> end
-void program(void)
-{
+void program(void){
 	match(BEGIN);
 	statement_list();
 	match(END);
+	finish();
 }
 
 // <statement> {<statement>}
-void statement_list(void)
-{
+void statement_list(void){
 	statement();
-	while (1) {
-		switch (next_token()) {
-		case ID:
-		case READ:
-		case WRITE:
-			statement ();
+	while(1) {
+		switch(next_token()) {
+		case ID: case READ: case WRITE:
+			statement();
 			break;
 		default:
 			return;
@@ -62,128 +61,109 @@ void statement_list(void)
 	}
 }
 
-// Tiene 3 opciones: que sea read, write o declaración de variables
-void statement()
-{
+void statement(void){
 	token tok = next_token();
 	expr_rec left, right;
 	switch (tok) {
+	/* <statement> ::= ID := <expresion>; */
 	case ID:
 		id(&left);
-		/* <statement> ::= ID := <expresion>; */
-		match (ASSIGNOP);
+		match(ASSIGNOP);
 		expression(&right);
 		assign(left, right);
-		match (SEMICOLON);
+		match(SEMICOLON);
 		break;
-
+	/* <statement> ::= READ (<id list>) ; */
 	case READ:
-		/* <statement> ::= READ (<id list>) ; */
 		match(READ);
 		match(LPAREN);
 		id_list();
 		match(RPAREN);
 		match(SEMICOLON);
 		break;
-
+	/* <statement> ::= WRITE (<id list>) ; */
 	case WRITE:
-		/* <statement> ::= WRITE (<id list>) ; */
 		match(WRITE);
 		match(LPAREN);
 		expr_list();
 		match(RPAREN);
 		match(SEMICOLON);
 		break;
-
 	default:
-		syntax_error(tok);
+		syntax_error();
 		break;
 	}
 }
 
-
 //A parsing procedure including semantic processing
-void expression (expr_rec *result)
-{
+void expression(expr_rec * result){
 	expr_rec left_operand, right_operand;
-	op_rec op;
-
-	primary (&left_operand);
-	while (next_token() == PLUSOP || next_token() == MINUSOP)
-	{
-		add_op (&op);
-		primary (&right_operand);
-		left_operand = gen_infix (left_operand, op, right_operand);
+	token tok;
+	char op[MAXIDLEN];
+	primary(&left_operand);
+	for(tok = next_token(); tok == PLUSOP || tok == MINUSOP; tok = next_token()) {
+		add_op(op);
+		primary(&right_operand);
+		left_operand = gen_infix(left_operand, op, right_operand);
 	}
 	*result = left_operand;
 }
 
-// Puede ser un int, una variable o combinación de ambas que se debe especificar (expression)
-void primary (expr_rec * result)
-{
-	token tok = next_token();
-	switch (tok) {
-	case LPAREN:
-		/* <primary> ::= { <expression> }*/
-		match (LPAREN);
-		expression(result);
-		match (RPAREN);
-		break;
+// Int, variable o or combination of both that must be specified (expression)
+void primary(expr_rec * result){
+	switch(next_token()) {
+	/* <primary> ::= ID */
 	case ID:
-		/* <primary> ::= ID */
 		id(result);
 		break;
+	/* <primary> ::= INTLITERAL */
 	case INTLITERAL:
-		/* <primary> ::= INTLITERAL */
 		match(INTLITERAL);
 		*result = process_literal();
 		break;
-	default:
-		syntax_error(tok);
+	/* <primary> ::= { <expression> }*/
+	case LPAREN:
+		match(LPAREN);
+		expression(result);
+		match(RPAREN);
 		break;
 	}
 }
 
-// Operacion de suma o resta
-void add_op(op_rec * result)
-{
+/* <addop> ::= PLUSOP | MINUSOP */
+void add_op(char * result){
 	token tok = next_token();
-
-	/* <addop> ::= PLUSOP | MINUSOP */
-	if (tok == PLUSOP || tok == MINUSOP)
+	if (tok == PLUSOP || tok == MINUSOP) {
 		match(tok);
-	//process_op();
-	else
-	{
-		syntax_error(tok);
-	}
+		strcpy(result, process_op());
+	} else
+		syntax_error();
 }
 
+void syntax_error(){
+	printf("ERROR SINTACTICO");
+}
+
+void lexical_error(){
+	printf("ERROR LEXICO");
+}
+
+
 /* <id list> : ID { , ID} */
-void id_list(void)
-{
+void id_list(void){
 	token tok;
 	expr_rec reg;
 	id(&reg);
 	read_id(reg);
-
-	for(tok=next_token(); tok == COMMA; tok=next_token()) {
+	for ( tok = next_token(); tok == COMMA; tok = next_token()) {
 		match(COMMA);
 		id(&reg);
 		read_id(reg);
 	}
-
-	// match(ID);
-	//
-	// while (next_token()==COMMA) {
-	// 	match(COMMA);
-	// 	match(ID);
-	// }
 }
 
 /* <expr list> ::= <expression> { , <expression> } */
-void expr_list(void)
-{
+void expr_list(void){
 	token tok;
 	expr_rec reg;
 	expression(&reg);
@@ -193,16 +173,11 @@ void expr_list(void)
 		expression(&reg);
 		write_expr(reg);
 	}
-	// while (next_token() == COMMA) {
-	// 	match(COMMA);
-	// 	expression();
-	// }
 }
 
-// retorna el siguiente token a ser asociado
 token next_token(void){
 	if (flagToken!=1) {
-		current_token = scanner(archivo);
+		current_token = scanner();
 		flagToken = 1;
 		if(current_token == LEXICALERROR) {
 			lexical_error();
@@ -220,106 +195,7 @@ void id(expr_rec * result){
 	*result = process_id();
 }
 
-
-/* -----------------------------------------------SCANNER------------------------------------------------------*/
-
-token scanner ()
-{
-	int in_char, c;
-	clear_buffer();//limpia el array
-	if (feof(archivo))
-		return SCANEOF;
-
-
-	while ((in_char = getc(archivo)) != EOF) {
-
-		if (isspace(in_char))
-			continue; /* do nothing */
-		else if (isalpha(in_char)) {//revisa si el caracter es alfabetico
-
-			buffer_char(in_char);//agrega caracter al buffer
-
-			for (c = getc(archivo); isalnum(c) || c == '_'; c = getc(archivo)) { //recorre la hilera agregando caracteres al buffer_char, termina cuando no es un caracter ni underscore
-				buffer_char(c);
-			}
-			ungetc(c,archivo);
-
-
-
-			return check_reserved(); //Revisa si el string encontrado es una palabra reservada
-
-		}  else if (isdigit(in_char)) {
-
-			buffer_char(in_char);
-			for (c = getc(archivo); isdigit(c); c = getc(archivo))
-				buffer_char(c);
-			ungetc(c,archivo);
-			token_buffer[ncol] = '\0';
-			//printf( "Token_Buffer = %s\n", &token_buffer[0] );
-
-			return INTLITERAL;
-
-		} else if (in_char == '(')
-			return LPAREN;
-		else if (in_char == ')')
-			return RPAREN;
-		else if (in_char == ';')
-			return SEMICOLON;
-		else if (in_char == ',')
-			return COMMA;
-		else if (in_char == '+')
-			return PLUSOP;
-		else if (in_char == ':') {
-			/* looking for ":=" */
-			c = getc(archivo);
-			if (c == '=')
-				return ASSIGNOP;
-			else {
-				ungetc(c,archivo);
-				lexical_error();//
-			}
-		} else if (in_char == '-') {
-			/* is it --, comment start */
-			c = getc(archivo);
-			if (c == '-') {
-				do
-				{
-					in_char = getc(archivo);
-				} while (in_char != '\n');
-			} else {
-				ungetc(c,archivo);
-				return MINUSOP;
-			}
-		}  else
-			lexical_error();
-	}
-
-	return 0;
-}
-
-/* Agrega su argumento a un buffer de caracteres llamado token_buffer - AgregarCaracter()*/
-void buffer_char(int c)
-{
-	//agregar
-	// printf("buffer char character %c \n",c);
-	token_buffer[ncol] = c;
-	//printf("ncol char character %d \n",ncol);
-	ncol++;
-
-}
-
-void clear_buffer(void)
-// reset the token string to be empty
-{ //token_buffer[0] = '\0';
-	int i;
-	for (i=0; i < MAXIDLEN; i++) {
-		token_buffer[i]='\0';
-	}
-	ncol = 0;
-	//memset(token_buffer,0,strlen(token_buffer));
-
-} // end of clearTokStr()
-
+/* -----------------------------------------------scanner------------------------------------------------------*/
 
 /* check_reserved
  * Toma identifiers que reconoce el scanner y retorna la clase de token (ID o alguna de las palabras reservadas).
@@ -327,7 +203,7 @@ void clear_buffer(void)
  */
 token check_reserved(void)
 {
-	token_buffer[ncol] = '\0';
+	//token_buffer[ncol] = '\0';
 	//printf( "Token_Buffer = %s\n", &token_buffer[0] );
 
 
@@ -358,62 +234,263 @@ token check_reserved(void)
 		tok=ID;
 		return(tok);
 	}
-	//printf("\n");
-	//printf(token_buffer);
+}
 
+// token scanner ()
+// {
+//
+// 	int in_char, c;
+// 	int i=0;
+// 	clear_buffer();//limpia el array
+// 	if (feof(archive))
+// 		return SCANEOF;
+//
+//
+// 	while ((in_char = getc(archive)) != EOF) {
+// 		//printf("%c\n",in_char);
+//
+// 		if (isspace(in_char))
+// 			continue; /* do nothing */
+// 		else if (isalpha(in_char)) {//revisa si el caracter es alfabetico
+//
+// 			buffer_char(in_char, i);//agrega caracter al buffer
+// 			i++;
+//
+// 			for (c = getc(archive); isalnum(c) || c == '_'; c = getc(archive)) { //recorre la hilera agregando caracteres al buffer_char, termina cuando no es un caracter ni underscore
+// 				buffer_char(c, i);
+// 				i++;
+// 			}
+// 			ungetc(c,archive);
+//
+// 			return check_reserved(); //Revisa si el string encontrado es una palabra reservada
+//
+// 		}  else if (isdigit(in_char)) {
+// 			buffer_char(in_char, i);
+// 			i++;
+// 			for (c = getc(archive); isdigit(c); c = getc(archive))
+// 				buffer_char(c, i);
+// 			i++;
+// 			ungetc(c,archive);
+//
+// 			//token_buffer[ncol] = '\0';
+// 			//printf( "Token_Buffer = %s\n", &token_buffer[0]);
+//
+// 			return INTLITERAL;
+//
+// 		} else if (in_char == '(')
+// 			return LPAREN;
+// 		else if (in_char == ')')
+// 			return RPAREN;
+// 		else if (in_char == ';')
+// 			return SEMICOLON;
+// 		else if (in_char == ',')
+// 			return COMMA;
+// 		else if (in_char == '+') {
+// 			return PLUSOP;
+// 		}
+// 		else if (in_char == ':') {
+// 			/* looking for ":=" */
+// 			c = getc(archive);
+// 			if (c == '=') {
+// 				return ASSIGNOP;
+// 			}
+// 			else {
+// 				ungetc(c,archive);
+// 				lexical_error();//
+// 			}
+// 		} else if (in_char == '-') {
+// 			/* is it --, comment start */
+// 			c = getc(archive);
+// 			if (c == '-') {
+// 				do
+// 				{
+// 					in_char = getc(archive);
+// 				} while (in_char != '\n');
+// 			} else {
+// 				ungetc(c,archive);
+// 				return MINUSOP;
+// 			}
+// 		}  else
+// 			lexical_error();
+// 	}
+//
+// 	return 0;
+// }
+
+
+
+int esEstadoFinal(int e){
+	switch (e) {
+	case 0: case 1: case 3: case 11: case 14:
+		return 0;
+	}
+	return 1;
 }
 
 
+
+token scanner(void){
+	char c;
+	int col, i = 0, estado_actual = 0;
+
+	static int tabla [15][13]={
+		{1,3,5,6,7,8,9,10,11,14,13,0,14},
+		{1,1,2,2,2,2,2,2,2,2,2,2,2},
+		{14,14,14,14,14,14,14,14,14,14,14,14,14},
+		{4,3,4,4,4,4,4,4,4,4,4,4,4},
+		{14,14,14,14,14,14,14,14,14,14,14,14,14},
+		{14,14,14,14,14,14,14,14,14,14,14,14,14},
+		{14,14,14,14,14,14,14,14,14,14,14,14,14},
+		{14,14,14,14,14,14,14,14,14,14,14,14,14},
+		{14,14,14,14,14,14,14,14,14,14,14,14,14},
+		{14,14,14,14,14,14,14,14,14,14,14,14,14},
+		{14,14,14,14,14,14,14,14,14,14,14,14,14},
+		{14,14,14,14,14,14,14,14,14,12,14,14,14},
+		{14,14,14,14,14,14,14,14,14,12,14,14,14},
+		{14,14,14,14,14,14,14,14,14,14,14,14,14},
+		{14,14,14,14,14,14,14,14,14,14,14,14,14}
+	};
+
+	clear_buffer();
+
+	do {
+		c = getc(archive);
+		col = columna(c);
+		estado_actual = tabla[estado_actual][col];
+		if (col!= 11) {
+			buffer_char(c, i);
+			i++;
+		}
+	} while (!esEstadoFinal(estado_actual));
+
+	switch(estado_actual) {
+	case 2:
+		if (col != 11) {
+			ungetc(c, archive);
+			token_buffer[i-1] = '\0';
+		}
+		return ID;
+	case 4:
+		if (col != 11) {
+			ungetc(c, archive);
+			token_buffer[i-1] = '\0';
+		}
+		return INTLITERAL;
+	case 5:
+		return PLUSOP;
+	case 6:
+		return MINUSOP;
+	case 7:
+		return LPAREN;
+	case 8:
+		return RPAREN;
+	case 9:
+		return COMMA;
+	case 10:
+		return SEMICOLON;
+	case 12:
+		return ASSIGNOP;
+	case 13:
+		return SCANEOF;
+	case 14:
+		return LEXICALERROR;
+
+	}
+	return SCANEOF;
+}
+
+int columna(int c){
+	if(isalpha(c)) {
+		return 0;
+	}else if (isdigit(c)) {
+		return 1;
+	}else if (isspace(c)) {
+		return 11;
+	}
+	switch (c) {
+	case '+':
+		return 2;
+	case '-':
+		return 3;
+	case '(':
+		return 4;
+	case ')':
+		return 5;
+	case ',':
+		return 6;
+	case ';':
+		return 7;
+	case ':':
+		return 8;
+	case '=':
+		return 9;
+	case EOF:
+		return 10;
+	default:
+		return 12;
+
+	}
+}
+
+//Esta función tiene algo malo, no me pregunten qué, pero funciona mejor la de la progra en esp.
+// /* Agrega su argumento a un buffer de caracteres llamado token_buffer - AgregarCaracter()*/
+// void buffer_char(int c)
+// {
+// 	//agregar
+// 	printf("buffer char character %c \n",c);
+// 	token_buffer[ncol] = c;
+// 	//printf("ncol char character %d \n",ncol);
+// 	ncol++;
+//
+// }
+
+
+/* Adds argument to token_buffer*/
+void buffer_char(int c, int posicion){
+	token_buffer[posicion] = c;
+}
+
+// Reset the token string to be empty
+void clear_buffer(void){
+	memset(token_buffer,0,strlen(token_buffer));
+}
 
 /*-----------------------------Semantic routines-------------------------------*/
 
-
 /*Convert literal to a numeric representation and build semantic record.*/
-expr_rec process_literal(void)
-{
-	expr_rec t;
-
-	t.kind = LITERALEXPR;
-	strcpy(t.name, token_buffer);
-	sscanf(token_buffer, "%d", &t.val);
-	return t;
+expr_rec process_literal(void){
+	expr_rec reg;
+	reg.kind = INTLITERAL;
+	strcpy(reg.name, token_buffer);
+	sscanf(token_buffer, "%d", &reg.val);
+	return reg;
 }
 
 /*Declare ID and build a corresponding semantic record.*/
-expr_rec process_id(void)
-{
-	expr_rec t;
-
+expr_rec process_id(void){
+	expr_rec reg;
 	check_id(token_buffer);
-	t.kind = IDEXPR;
-	strcpy (t.name, token_buffer);
-	return t;
+	reg.kind = ID;
+	strcpy(reg.name, token_buffer);
+	return reg;
 }
 
-op_rec process_op(void)
-{
-	/* Produce operator descriptor. */
-	op_rec o;
-	if (current_token == PLUSOP)
-		o.operator=PLUS;
-	else
-		o.operator=MINUS;
-	return o;
+/* Produce operator descriptor. (Diff on book)*/
+char * process_op(void){
+	return token_buffer;
 }
 
-//Genera una instrucción de read - Leer()
-void read_id(expr_rec in_var)
-{
-	generate("Read", in_var.name,"Integer","");
+/* Produce read instruction*/
+void read_id(expr_rec in_var){
+	generate("Read", in_var.name, "Integer", "");
 }
 
-//Genera una instrucción de write - Escribir()
-void write_expr(expr_rec out_expr)
-{
-	generate("Write", extractExpr(&out_expr),"Integer","");
+/* Produce write instruction*/
+void write_expr(expr_rec out_expr){
+	generate("Write", extractExpr(&out_expr), "Integer", "");
 }
 
-//Auxiliar del gen_infix, rutina para almacenar temporales
+//Produce temporals, gen_infix aux routine
 char *get_temp(void)
 {
 	/* max temporary allocated so far */
@@ -426,72 +503,88 @@ char *get_temp(void)
 	return tempname;
 }
 
-/* Generate code for infix operation.
-   Get result temp and set up semantic record for result - GenInfijo()*/
-expr_rec gen_infix(expr_rec e1, op_rec op, expr_rec e2)
-{
-	//expr_rec tiene kind,name,value
-	expr_rec e_rec;     /* An expr_rec with temp variant set. */
-	e_rec.kind = TEMPEXPR;
+/* Generate code for infix operation. Get result temp and set up semantic record for result*/
+//Esta no calza con libro tampoco
+// expr_rec gen_infix(expr_rec e1, char * op, expr_rec e2){
+// 	expr_rec reg;
+// 	char opString[MAXIDLEN];
+// 	reg.kind = TEMPEXPR;
+//
+// 	//Assigns name to expression (Ej. Temp&1)
+// 	strcpy(reg.name, get_temp());
+//
+// 	if (op[0] == '-')
+// 		strcpy(opString, "Add");
+// 	if (op[0] == '+')
+// 		strcpy(opString, "Sub");
+//
+// 	if (e1.kind == IDEXPR)
+// 		check_id(extractExpr(&e1));
+// 	if (e2.kind == IDEXPR)
+// 		check_id(extractExpr(&e2));
+// 	check_id(reg.name);
+//
+// 	generate(opString, extractExpr(&e1), extractExpr(&e2), reg.name);
+//
+// 	return reg;
+// }
 
-	//Asigna el nombre a la expresión (Ej. Temp&1)
-	strcpy(e_rec.name, get_temp());
+expr_rec gen_infix(expr_rec e1, char * op, expr_rec e2){
+	expr_rec reg;
+	char cadenaTemporal[MAXIDLEN] = "Temp&";
+	char numero[MAXIDLEN];
+	char cadenaOperador[MAXIDLEN];
 
-	if(e1.kind == IDEXPR) {
+	if (op[0] == '-')
+		strcpy(cadenaOperador, "Sub");
+	if (op[0] == '+')
+		strcpy(cadenaOperador, "Add");
+	sprintf(numero, "%d", numeroVariableTemporal);
+	numeroVariableTemporal++;
+	strcat(cadenaTemporal, numero);
+	if (e1.kind == ID)
 		check_id(extractExpr(&e1));
-	}
-	if(e2.kind == IDEXPR) {
+	if (e2.kind == ID)
 		check_id(extractExpr(&e2));
-	}
-	generate (extractOp(&op), extractExpr(&e1),extractExpr(&e2), e_rec.name);
-	return e_rec;
+	check_id(cadenaTemporal);
+	generate(cadenaOperador, extractExpr(&e1), extractExpr(&e2), cadenaTemporal);
+	strcpy(reg.name, cadenaTemporal);
+	return reg;
 }
 
-//Escribe una instrucción sobre el archivo de salida (del formato OP A,B,C)
+/* Write instruction to archive */
 void generate(char * co, char * a, char * b, char * c){
-	fprintf(archivoSalida, "%s %s", co, a);
+	fprintf(outputArchive, "%s %s", co, a);
 
 	if (b[0]!='\0')
-		fprintf(archivoSalida, "%c%s", ',', b);
+		fprintf(outputArchive, "%c%s", ',', b);
 
 	if (c[0]!='\0')
-		fprintf(archivoSalida, "%c%s", ',', c);
+		fprintf(outputArchive, "%c%s", ',', c);
 
-	fprintf(archivoSalida, "\n");
+	fprintf(outputArchive, "\n");
 }
 
-//Esta es tomada del programa en español pero podría no funcionar,
-// porque nuestro struct de expr_rec es diferente - Extraer()
-// Toma la expresión y retorna una string que corresponde a la información semántica que contiene.
-// Esta string podría ser un identifier, op code, literal, etc.
-// Esta información se le da a generate() para crear una instrucción completa.
+/*Takes expression and returns semantic info it contains*/
+// char * extractExpr(expr_rec * reg){
+// 	if(reg->kind == IDEXPR) {
+// 		return reg->name;
+// 	} else {
+// 		printf("Something went wrong at extractExpr");
+// 	}
+// }
+
 char * extractExpr(expr_rec * reg){
-	if(reg->kind == IDEXPR) {
-		return reg->name;
-	}
-	// else if(reg->kind == LITERALEXPR) {
-	// 	return reg->val;
-	// }
-	// else{
-	// 	return 0;
-	// }
+	return reg->name;
 }
 
-char * extractOp (op_rec * op){
-	if(op->operator == PLUS) {
-		return "Add";
-	} else {
-		return "Sub";
-	}
-}
-
-
-//Busca si existe un símbolo dado en la tabla de símbolos - Buscar()
+/*Checks if a given symbol is in the TS*/
 int lookup(char * id, RegTS * TS, token * t){
 	int i = 0;
-	while (strcmp("$", TS[i].identificador)) {
-		if (!strcmp(id, TS[i].identificador)) {
-			*t = TS[i].t;
+	while (strcmp("$", TS[i].identifier)) {
+		// CHEQUEAR ESTE LOOP QUE NO ENTIENDO
+		if (!strcmp(id, TS[i].identifier)) {
+			*t = TS[i].tok;
 			return 1;
 		}
 		i++;
@@ -499,47 +592,37 @@ int lookup(char * id, RegTS * TS, token * t){
 	return 0;
 }
 
-//Ingresa un símbolo en la tabla de símbolos - colocar()
+/*Enters a symbol at the last spot of the symbol table (before $)*/
 void enter(char * id, RegTS * TS){
-	int i = 4; //No sé si deberíamos tener las palabras reservadas en la tabla de símboos... Son esas 4
-	//Navega al final de la tabla de símbolos
-	while (strcmp("$", TS[i].identificador)) {
-		i++;
-	}
-
+	int i = 4;
+	while (strcmp("$", TS[i].identifier)) i++;
 	if (i <= 999) {
-		strcpy(TS[i].identificador, id );
-		TS[i].t = ID;
-		strcpy(TS[++i].identificador, "$" );
+		strcpy(TS[i].identifier, id );
+		TS[i].tok = ID;
+		strcpy(TS[++i].identifier, "$" );
 	}
 }
 
-//Chequea si un token se encuentra en la tabla de símbolos
-//Si no se encuentra, lo agrega y luego genera la declaración de la variable - Chequear()
-void check_id(char *s)
-{
-	//Aquí no entiendo para qué sirve tok
+/*Checks if a token is in the symbol table*/
+void check_id(char * s){
 	token tok;
-	if (!lookup(s,TS,&tok)) {
+	if (!lookup(s, TS, &tok)) {
 		enter(s, TS);
-		generate("Declare",s,"Integer","");
+		generate("Declare", s, "Integer", "");
 	}
 }
 
 /* Generate code for assignment. */
-void assign (expr_rec target, expr_rec source)
-{
-	generate ("Store", extractExpr(&source), target.name,"");
+void assign(expr_rec target, expr_rec source){
+	generate("Store", extractExpr(&source), target.name, "");
 }
 
+/* semantic initialization, none needed. */
+void start(void){
 
-void start (void)
-{
-	/* semantic initialization, none needed. */
 }
 
 /* Generate code to finish program */
-void finish (void)
-{
-	generate("Halt","","","");
+void finish(void){
+	generate("Halt", "", "", "");
 }

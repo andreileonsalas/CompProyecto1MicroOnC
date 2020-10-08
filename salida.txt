@@ -1,0 +1,10 @@
+Declara A,Entera
+Declara BB,Entera
+Declara Temp&1,Entera
+Restar BB,314,Temp&1
+Declara Temp&2,Entera
+Sumar Temp&1,A,Temp&2
+Almacena Temp&2,A
+Declara FIN,Entera
+Almacena þ,FIN
+Detiene 
