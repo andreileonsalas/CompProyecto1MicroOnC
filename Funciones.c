@@ -21,8 +21,8 @@ int validation (char* archive,char c){
 }
 
 void initialicefiles(void){
-	fprintf(outputArchive, "section	.text \n   global main\nmain:;tells linker entry point\n");
-	fprintf(sectionData, "default rel\nextern printf,scanf\nsection .rodata\nformat2 db \"%%#x\", 10, 0 \nSECTION .bss\nx resb 4\nsection .data\nformat db \'%%d\',0\n");
+	fprintf(outputArchive, "section	.text \n   global _start     ;must be declared for linker (ld)\n_start:	            ;tells linker entry point\n");
+	fprintf(sectionData, "section .data\n");
 }
 
 void joinfiles(){
@@ -540,7 +540,7 @@ void read_id(expr_rec in_var){
 
 /* Produce write instruction*/
 void write_expr(expr_rec out_expr){
-	fprintf(outputArchive,"mov esi, [%s]\nlea rdi, [rel format2]\nxor eax, eax\ncall printf\n",extractExpr(&out_expr));
+	//fprintf(outputArchive,"mov esi, [%s]\nlea rdi, [rel format2]\nxor eax, eax\ncall printf\n",extractExpr(&out_expr));
 	//generate("Write", extractExpr(&out_expr), "Integer", "");
 }
 
