@@ -9,10 +9,6 @@ int main(int argc, char* argv[]) {
 		fprintf(stderr,"Debe ingresar el archivo fuente y opcionalmente el nombre que desea darle al archivo de salida.\n");
 		return -1;
 	}
-	if (!validation(argv[1],'m')) {
-		printf("La extension del archivo fuente debe ser .m\n");
-		return -2;
-	}
 	archive = fopen(argv[1], "rb");
 	if (archive == NULL) {
 		printf("El archivo fuente no existe\n");
@@ -27,7 +23,7 @@ int main(int argc, char* argv[]) {
 		outputArchive = fopen("salida.asm", "wb+");
 		sectionData = fopen("salidadata.asm", "wb+");
 	}
-	
+
 	system_goal();
 
 	fclose(archive);
@@ -37,29 +33,29 @@ int main(int argc, char* argv[]) {
 	fclose(sectionData);
 
 
-	FILE *fp1 = fopen("salidadata.asm", "r"); 
-   	FILE *fp2 = fopen("salida.asm", "r"); 
-	FILE *fp3 = fopen("microasm.asm", "w"); 
-	char c; 
-	
-	if (fp1 == NULL || fp2 == NULL || fp3 == NULL) 
-	{ 
-			puts("Could not open files"); 
-			exit(0); 
-	} 
-	
-	//Copy contents of first file to file3.txt 
-	while ((c = fgetc(fp1)) != EOF) 
+	FILE *fp1 = fopen("salidadata.asm", "r");
+	FILE *fp2 = fopen("salida.asm", "r");
+	FILE *fp3 = fopen("microasm.asm", "w");
+	char c;
+
+	if (fp1 == NULL || fp2 == NULL || fp3 == NULL)
+	{
+		puts("Could not open files");
+		exit(0);
+	}
+
+	//Copy contents of first file to file3.txt
+	while ((c = fgetc(fp1)) != EOF)
 		fputc(c, fp3);
-	
-	// Copy contents of second file to file3.txt 
-	while ((c = fgetc(fp2)) != EOF) 
-		fputc(c, fp3); 
-	
-	printf("Generado asm final"); 
-	
-	fclose(fp1); 
-	fclose(fp2); 
+
+	// Copy contents of second file to file3.txt
+	while ((c = fgetc(fp2)) != EOF)
+		fputc(c, fp3);
+
+	printf("Generado asm final");
+
+	fclose(fp1);
+	fclose(fp2);
 	fclose(fp3);
 
 	printf("Compilando el codigo\n");
@@ -67,7 +63,7 @@ int main(int argc, char* argv[]) {
 	system("gcc -fPIC microasm.o -o microasm");
 	printf("Ejecutando el codigo\n");
 	system("./microasm");
-	
+
 
 	return EXIT_SUCCESS;
 }
