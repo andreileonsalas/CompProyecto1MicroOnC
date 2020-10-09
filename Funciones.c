@@ -22,7 +22,7 @@ int validation (char* archive,char c){
 
 void initialicefiles(void){
 	fprintf(outputArchive, "section	.text \n   global _start     ;must be declared for linker (ld)\n_start:	            ;tells linker entry point\n");
-	fprintf(sectionData, "section .data\n");
+	fprintf(sectionData, "extern printf,scanf    \nSECTION .bss\n    x resb 4section .data\n format db '%d',0\n");
 }
 
 void joinfiles(){
