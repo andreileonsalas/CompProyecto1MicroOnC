@@ -62,11 +62,11 @@ int main(int argc, char* argv[]) {
 	fclose(fp2); 
 	fclose(fp3);
 
-	// printf("Compilando el codigo\n");
-	// system("nasm -f elf64 microasm.asm");
-	// system(" gcc -fPIC microasm.o -o microasm");
-	// printf("Ejecutando el codigo\n");
-	// system("./microasm");
+	printf("Compilando el codigo\n");
+	system("nasm -f elf64 microasm.asm");
+	system("gcc -fPIC microasm.o -o microasm");
+	printf("Ejecutando el codigo\n");
+	system("./microasm");
 	
 
 	return EXIT_SUCCESS;
