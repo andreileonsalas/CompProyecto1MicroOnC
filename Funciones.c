@@ -537,7 +537,7 @@ char *get_temp(void)
 	static char tempname [MAXIDLEN];
 
 	max_temp++;
-	sprintf(tempname, "Temp&%d", max_temp);
+	sprintf(tempname, "Temp%d", max_temp);
 	check_id(tempname);
 	return tempname;
 }
@@ -570,7 +570,7 @@ char *get_temp(void)
 
 expr_rec gen_infix(expr_rec e1, char * op, expr_rec e2){
 	expr_rec reg;
-	char cadenaTemporal[MAXIDLEN] = "Temp&";
+	char cadenaTemporal[MAXIDLEN] = "Temp";
 	char numero[MAXIDLEN];
 	char cadenaOperador[MAXIDLEN];
 	//printf("Genera codigo aaaaa%c\n",op[0]);

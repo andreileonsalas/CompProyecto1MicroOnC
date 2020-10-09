@@ -23,14 +23,22 @@ int main(int argc, char* argv[]) {
 		outputArchive = fopen(argv[2], "wb+");
 	}else{
 		outputArchive = stdout;
+		outputArchive = fopen("salida.asm", "wb+");
 	}
 
 	system_goal();
 
 	fclose(archive);
-	if (argc==3) {
+	if (argc==2) {
 		fclose(outputArchive);
 	}
+
+	printf("Compilando el codigo\n");
+	system("nasm -f elf64 salida.asm");
+	system("ld salida.o");
+	printf("Ejecutando el codigo\n");
+	system("./a.out");
+	
 
 	return EXIT_SUCCESS;
 }
