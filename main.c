@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
 	fclose(fp3);
 
 	// printf("Compilando el codigo\n");
-	// system("nasm -f elf64 salida.asm");
+	// system("nasm -f elf64 microasm.asm");
 	// system("ld salida.o");
 	// printf("Ejecutando el codigo\n");
 	// system("./a.out");
