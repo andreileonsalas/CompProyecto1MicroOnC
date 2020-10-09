@@ -64,9 +64,9 @@ int main(int argc, char* argv[]) {
 
 	// printf("Compilando el codigo\n");
 	// system("nasm -f elf64 microasm.asm");
-	// system(" gcc salida.o -o salida");
+	// system(" gcc microasm.o -o micro");
 	// printf("Ejecutando el codigo\n");
-	// system("./a.out");
+	// system("./micro");
 	
 
 	return EXIT_SUCCESS;
