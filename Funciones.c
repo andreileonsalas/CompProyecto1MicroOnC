@@ -21,8 +21,8 @@ int validation (char* archive,char c){
 }
 
 void initialicefiles(void){
-	fprintf(outputArchive, "section	.text \n   global _start     ;must be declared for linker (ld)\n_start:	            ;tells linker entry point\n");
-	fprintf(sectionData, "extern printf,scanf    \nSECTION .bss\n    x resb 4\nsection .data\n format db \'%%d\',0\n");
+	fprintf(outputArchive, "section	.text \n   global main\nmain:;tells linker entry point\n");
+	fprintf(sectionData, "default rel\nextern printf,scanf\nsection .rodata\nformat2 db \"%%#x\", 10, 0 \nSECTION .bss\nx resb 4\nsection .data\nformat db \'%%d\',0\n");
 }
 
 void joinfiles(){
@@ -362,131 +362,6 @@ token scanner ()
 
 
 
-// int esEstadoFinal(int e){
-// 	switch (e) {
-// 	case 0: case 1: case 3: case 11: case 14:
-// 		return 0;
-// 	}
-// 	return 1;
-// }
-
-
-
-// token scanner(void){
-// 	char c;
-// 	int col, i = 0, estado_actual = 0;
-
-// 	static int tabla [15][13]={
-// 		{1,3,5,6,7,8,9,10,11,14,13,0,14},
-// 		{1,1,2,2,2,2,2,2,2,2,2,2,2},
-// 		{14,14,14,14,14,14,14,14,14,14,14,14,14},
-// 		{4,3,4,4,4,4,4,4,4,4,4,4,4},
-// 		{14,14,14,14,14,14,14,14,14,14,14,14,14},
-// 		{14,14,14,14,14,14,14,14,14,14,14,14,14},
-// 		{14,14,14,14,14,14,14,14,14,14,14,14,14},
-// 		{14,14,14,14,14,14,14,14,14,14,14,14,14},
-// 		{14,14,14,14,14,14,14,14,14,14,14,14,14},
-// 		{14,14,14,14,14,14,14,14,14,14,14,14,14},
-// 		{14,14,14,14,14,14,14,14,14,14,14,14,14},
-// 		{14,14,14,14,14,14,14,14,14,12,14,14,14},
-// 		{14,14,14,14,14,14,14,14,14,12,14,14,14},
-// 		{14,14,14,14,14,14,14,14,14,14,14,14,14},
-// 		{14,14,14,14,14,14,14,14,14,14,14,14,14}
-// 	};
-
-// 	clear_buffer();
-
-// 	do {
-// 		c = getc(archive);
-// 		col = columna(c);
-// 		estado_actual = tabla[estado_actual][col];
-// 		if (col!= 11) {
-// 			buffer_char(c, i);
-// 			i++;
-// 		}
-// 	} while (!esEstadoFinal(estado_actual));
-
-// 	switch(estado_actual) {
-// 	case 2:
-// 		if (col != 11) {
-// 			ungetc(c, archive);
-// 			token_buffer[i-1] = '\0';
-// 		}
-// 		return ID;
-// 	case 4:
-// 		if (col != 11) {
-// 			ungetc(c, archive);
-// 			token_buffer[i-1] = '\0';
-// 		}
-// 		return INTLITERAL;
-// 	case 5:
-// 		return PLUSOP;
-// 	case 6:
-// 		return MINUSOP;
-// 	case 7:
-// 		return LPAREN;
-// 	case 8:
-// 		return RPAREN;
-// 	case 9:
-// 		return COMMA;
-// 	case 10:
-// 		return SEMICOLON;
-// 	case 12:
-// 		return ASSIGNOP;
-// 	case 13:
-// 		return SCANEOF;
-// 	case 14:
-// 		return LEXICALERROR;
-
-// 	}
-// 	return SCANEOF;
-// }
-
-// int columna(int c){
-// 	if(isalpha(c)) {
-// 		return 0;
-// 	}else if (isdigit(c)) {
-// 		return 1;
-// 	}else if (isspace(c)) {
-// 		return 11;
-// 	}
-// 	switch (c) {
-// 	case '+':
-// 		return 2;
-// 	case '-':
-// 		return 3;
-// 	case '(':
-// 		return 4;
-// 	case ')':
-// 		return 5;
-// 	case ',':
-// 		return 6;
-// 	case ';':
-// 		return 7;
-// 	case ':':
-// 		return 8;
-// 	case '=':
-// 		return 9;
-// 	case EOF:
-// 		return 10;
-// 	default:
-// 		return 12;
-
-// 	}
-// }
-
-//Esta función tiene algo malo, no me pregunten qué, pero funciona mejor la de la progra en esp.
-// /* Agrega su argumento a un buffer de caracteres llamado token_buffer - AgregarCaracter()*/
-// void buffer_char(int c)
-// {
-// 	//agregar
-// 	//printf("buffer char character %c \n",c);
-// 	token_buffer[ncol] = c;
-// 	////printf("ncol char character %d \n",ncol);
-// 	ncol++;
-//
-// }
-
 
 /* Adds argument to token_buffer*/
 void buffer_char(int c, int posicion){
@@ -538,7 +413,7 @@ void read_id(expr_rec in_var){
 
 /* Produce write instruction*/
 void write_expr(expr_rec out_expr){
-	//fprintf(outputArchive,"mov esi, [%s]\nlea rdi, [rel format2]\nxor eax, eax\ncall printf\n",extractExpr(&out_expr));
+	fprintf(outputArchive,"mov esi, [%s]\nlea rdi, [rel format2]\nxor eax, eax\ncall printf\n",extractExpr(&out_expr));
 	//generate("Write", extractExpr(&out_expr), "Integer", "");
 }
 
