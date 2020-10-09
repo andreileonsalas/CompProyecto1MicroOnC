@@ -26,9 +26,9 @@ void initialicefiles(void){
 }
 
 void joinfiles(){
-	char c; 
-	while ((c = fgetc(outputArchive)) != EOF) 
-    	fputc(c, sectionData); 
+	char c;
+	while ((c = fgetc(outputArchive)) != EOF)
+		fputc(c, sectionData);
 }
 
 
@@ -54,7 +54,7 @@ void system_goal(void){
 	//printf("entrando a revisar match SCANEOF\n");
 	match(SCANEOF);
 	//fprintf(outputArchive, "\nint 80h \n mov eax,1 \nmov ebx,0\nint 80h\n");
-	
+
 }
 
 // begin <statement list> end
@@ -300,7 +300,7 @@ token scanner ()
 		}  else if (isdigit(in_char)) {
 			buffer_char(in_char, i);
 			i++;
-			for (c = getc(archive); isdigit(c); c = getc(archive)){
+			for (c = getc(archive); isdigit(c); c = getc(archive)) {
 				buffer_char(c, i);
 				i++;
 			}
@@ -499,10 +499,10 @@ void clear_buffer(void){
 	//printf("Se limpio el buffer\n");
 	memset(token_buffer,0,strlen(token_buffer));
 	int i;
-	for (i=0; i < strlen(token_buffer); i++){
+	for (i=0; i < strlen(token_buffer); i++) {
 		token_buffer[i]='\0';
 	}
-	
+
 }
 
 /*-----------------------------Semantic routines-------------------------------*/
@@ -533,9 +533,7 @@ char * process_op(void){
 
 /* Produce read instruction*/
 void read_id(expr_rec in_var){
-	//generate("Read", in_var.name, "Integer", "");
-
-	fprintf(outputArchive,"mov edi, format\nmov esi, x\nmov eax, 0\ncall scanf\n mov [%s],eax\n",in_var.name);
+	generate("Read", in_var.name, "Integer", "");
 }
 
 /* Produce write instruction*/
@@ -591,11 +589,13 @@ expr_rec gen_infix(expr_rec e1, char * op, expr_rec e2){
 	//printf("Genera codigo aaaaa%s\n",op);
 	//printf("el buffer tiene: %s\n",token_buffer);
 	if (op[0] == '-')
-		{//printf("Genera codigo para sub \n");
-		strcpy(cadenaOperador, "Sub");}
+	{    //printf("Genera codigo para sub \n");
+		strcpy(cadenaOperador, "Sub");
+	}
 	if (op[0] == '+')
-		{//printf("Genera codigo para add \n");
-		strcpy(cadenaOperador, "Add");}
+	{    //printf("Genera codigo para add \n");
+		strcpy(cadenaOperador, "Add");
+	}
 	sprintf(numero, "%d", numeroVariableTemporal);
 	numeroVariableTemporal++;
 	strcat(cadenaTemporal, numero);
