@@ -20,7 +20,16 @@ int validation (char* archive,char c){
 	}
 }
 
+void initialicefiles(void){
+	fprintf(outputArchive, "section	.text \n   global _start     ;must be declared for linker (ld)\n_start:	            ;tells linker entry point\n");
+	fprintf(sectionData, "section .data\n");
+}
 
+void joinfiles(){
+	char c; 
+	while ((c = fgetc(outputArchive)) != EOF) 
+    	fputc(c, sectionData); 
+}
 
 
 /* ------------------------------------------PARSER---------------------------------------------------------------*/
@@ -40,9 +49,12 @@ void match(token tok){
 
 // <program> SCANEOF
 void system_goal(void){
+	initialicefiles();
 	program();
 	//printf("entrando a revisar match SCANEOF\n");
 	match(SCANEOF);
+	//fprintf(outputArchive, "\nint 80h \n mov eax,1 \nmov ebx,0\nint 80h\n");
+	
 }
 
 // begin <statement list> end
@@ -535,7 +547,6 @@ char *get_temp(void)
 	/* max temporary allocated so far */
 	static int max_temp = 0;
 	static char tempname [MAXIDLEN];
-
 	max_temp++;
 	sprintf(tempname, "Temp%d", max_temp);
 	check_id(tempname);
@@ -590,7 +601,14 @@ expr_rec gen_infix(expr_rec e1, char * op, expr_rec e2){
 	if (e2.kind == ID)
 		check_id(extractExpr(&e2));
 	check_id(cadenaTemporal);
-	generate(cadenaOperador, extractExpr(&e1), extractExpr(&e2), cadenaTemporal);
+	//cadenaOperador contiene sub o add, y NO puede estar vacia
+	//extractExpr(&e1) puede devolver por ejemplo BB o 314
+	//extractExpr(&e2) puede devolver por ejemplo BB o 314
+	//cadenaTemporal es donde se va a almacenar el resultado
+	fprintf(outputArchive, "mov eax,%s\n", extractExpr(&e1));
+	fprintf(outputArchive, "%s eax,%s\n", cadenaOperador, extractExpr(&e2));
+	fprintf(outputArchive, "mov [%s],eax\n", cadenaTemporal);
+	//generate(cadenaOperador, extractExpr(&e1), extractExpr(&e2), cadenaTemporal);
 	strcpy(reg.name, cadenaTemporal);
 	return reg;
 }
@@ -606,6 +624,19 @@ void generate(char * co, char * a, char * b, char * c){
 		fprintf(outputArchive, "%c%s", ',', c);
 
 	fprintf(outputArchive, "\n");
+}
+
+/* Write instruction to archive */
+void generatevariables(char * co, char * a, char * b, char * c){
+	fprintf(sectionData, "%s %s", co, a);
+
+	if (b[0]!='\0')
+		fprintf(sectionData, "%c%s", ' ', b);
+
+	if (c[0]!='\0')
+		fprintf(sectionData, "%c%s", ' ', c);
+
+	fprintf(sectionData, "\n");
 }
 
 /*Takes expression and returns semantic info it contains*/
@@ -651,13 +682,16 @@ void check_id(char * s){
 	token tok;
 	if (!lookup(s, TS, &tok)) {
 		enter(s, TS);
-		generate("Declare", s, "Integer", "");
+		generatevariables(s," DD", "0", "");
+		//generate("Declare", s, "Integer", "");
 	}
 }
 
 /* Generate code for assignment. */
 void assign(expr_rec target, expr_rec source){
-	generate("Store", extractExpr(&source), target.name, "");
+	fprintf(outputArchive, "mov eax,%s\n", extractExpr(&source));
+	fprintf(outputArchive, "mov [%s],eax\n", target.name);
+	//generate("Store", extractExpr(&source), target.name, "");
 }
 
 /* semantic initialization, none needed. */
@@ -667,5 +701,6 @@ void start(void){
 
 /* Generate code to finish program */
 void finish(void){
-	generate("Halt", "", "", "");
+	//tenemos que ingresar la i80 o exit
+	generate("\nint 80h \n mov eax,1 \nmov ebx,0\nint 80h\n", "", "", "");
 }

@@ -25,6 +25,7 @@ typedef struct {
 
 FILE * archive;
 FILE * outputArchive;
+FILE * sectionData;
 
 
 char token_buffer[MAXIDLEN];
@@ -61,6 +62,8 @@ int columna(int c);
 void buffer_char(int caracter, int posicion);
 void clear_buffer(void);
 int validation(char* arch, char c);
+void initialicefiles();
+void joinfiles();
 int esEstadoFinal(int e);
 token check_reserved();
 
