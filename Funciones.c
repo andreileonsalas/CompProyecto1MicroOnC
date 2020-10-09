@@ -533,7 +533,7 @@ char * process_op(void){
 
 /* Produce read instruction*/
 void read_id(expr_rec in_var){
-	generate("Read", in_var.name, "Integer", "");
+	fprintf(outputArchive,"mov edi, format\nmov esi, x\nmov eax, 0\ncall scanf\n mov [%s],eax\n",in_var.name);
 }
 
 /* Produce write instruction*/
